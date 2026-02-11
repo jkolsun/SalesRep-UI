@@ -59,15 +59,6 @@ export default function LoginPage() {
     }, 15000) // 15 second timeout
 
     try {
-      // Clear any stale Supabase data from localStorage to prevent conflicts
-      if (typeof window !== 'undefined') {
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('sb-')) {
-            localStorage.removeItem(key)
-          }
-        })
-      }
-
       const supabase = createClient()
 
       const { data, error } = await supabase.auth.signInWithPassword({
