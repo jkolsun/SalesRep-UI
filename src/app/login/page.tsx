@@ -68,11 +68,15 @@ export default function LoginPage() {
 
       if (data.user) {
         // Get user role from profile
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', data.user.id)
           .single()
+
+        if (profileError) {
+          console.error('Profile fetch error:', profileError)
+        }
 
         toast({
           title: 'Welcome back!',
@@ -80,15 +84,14 @@ export default function LoginPage() {
           variant: 'success',
         })
 
-        // Use hard redirect to ensure middleware runs with new session
-        if (profile?.role === 'admin') {
-          window.location.href = '/admin/dashboard'
-        } else {
-          window.location.href = '/rep/dashboard'
-        }
-        return // Don't set loading to false, let the redirect happen
+        // Redirect based on role (default to rep if profile not found)
+        const role = profile?.role || 'rep'
+        const redirectUrl = role === 'admin' ? '/admin/dashboard' : '/rep/dashboard'
+
+        // Force redirect
+        window.location.replace(redirectUrl)
+        return
       } else {
-        // Edge case: no user returned
         setIsLoading(false)
       }
     } catch (error) {
