@@ -47,16 +47,9 @@ export async function middleware(req: NextRequest) {
     // Get user profile for role-based access
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, is_active')
+      .select('role')
       .eq('id', session.user.id)
       .single()
-
-    // Check if user is active
-    if (profile && !profile.is_active) {
-      // Sign out inactive user
-      await supabase.auth.signOut()
-      return NextResponse.redirect(new URL('/login?error=inactive', req.url))
-    }
 
     // Check admin route access
     const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route))

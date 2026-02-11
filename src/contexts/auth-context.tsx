@@ -13,7 +13,6 @@ interface UserProfile {
   full_name: string | null
   role: UserRole
   avatar_url: string | null
-  is_active: boolean
 }
 
 interface AuthContextType {
