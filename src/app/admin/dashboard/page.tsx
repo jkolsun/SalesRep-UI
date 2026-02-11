@@ -111,7 +111,6 @@ export default function AdminDashboardPage() {
         .from('profiles')
         .select('*')
         .eq('role', 'rep')
-        .eq('is_active', true)
 
       if (profiles) {
         const repsWithStats = await Promise.all(

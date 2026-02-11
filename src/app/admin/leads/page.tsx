@@ -119,7 +119,6 @@ export default function AdminLeadsPage() {
         .from('profiles')
         .select('id, full_name, email')
         .eq('role', 'rep')
-        .eq('is_active', true)
 
       setReps(repsData || [])
       setIsLoading(false)

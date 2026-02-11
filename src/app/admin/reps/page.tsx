@@ -26,20 +26,16 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
   UserPlus,
   MoreHorizontal,
   Eye,
-  Ban,
   Mail,
-  Phone,
   TrendingUp,
   Calendar,
   Loader2,
-  CheckCircle,
 } from 'lucide-react'
 import { formatDate, getInitials } from '@/lib/utils'
 import { toast } from '@/hooks/use-toast'
@@ -50,7 +46,6 @@ interface Rep {
   id: string
   full_name: string
   email: string
-  is_active: boolean
   created_at: string
   totalDials: number
   totalConnects: number
@@ -119,7 +114,6 @@ export default function RepsPage() {
             id: profile.id,
             full_name: profile.full_name || profile.email,
             email: profile.email,
-            is_active: profile.is_active,
             created_at: profile.created_at,
             totalDials: dialCount || 0,
             totalConnects: connectCount,
@@ -136,8 +130,8 @@ export default function RepsPage() {
     fetchReps()
   }, [user])
 
-  const activeReps = reps.filter((r) => r.is_active)
-  const inactiveReps = reps.filter((r) => !r.is_active)
+  // All reps are considered active (no is_active column in database)
+  const activeReps = reps
 
   const handleAddRep = async () => {
     if (!newRepName || !newRepEmail) return
@@ -159,34 +153,6 @@ export default function RepsPage() {
     setIsSaving(false)
   }
 
-  const handleToggleStatus = async (repId: string, currentStatus: boolean) => {
-    const supabase = createClient()
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ is_active: !currentStatus })
-      .eq('id', repId)
-
-    if (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to update rep status',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    setReps(
-      reps.map((r) =>
-        r.id === repId ? { ...r, is_active: !currentStatus } : r
-      )
-    )
-
-    toast({
-      title: currentStatus ? 'Rep Suspended' : 'Rep Reactivated',
-      description: `Rep status has been updated.`,
-    })
-  }
 
   if (isLoading) {
     return (
@@ -202,7 +168,7 @@ export default function RepsPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">Sales Reps</h1>
           <p className="text-gray-400">
-            {activeReps.length} active reps, {inactiveReps.length} inactive
+            {reps.length} total reps
           </p>
         </div>
         <Button onClick={() => setShowAddDialog(true)}>
@@ -336,14 +302,6 @@ export default function RepsPage() {
                             <TrendingUp className="mr-2 h-4 w-4" />
                             View Stats
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-orange-400"
-                            onClick={() => handleToggleStatus(rep.id, rep.is_active)}
-                          >
-                            <Ban className="mr-2 h-4 w-4" />
-                            Suspend
-                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -355,54 +313,6 @@ export default function RepsPage() {
         )}
       </Card>
 
-      {/* Inactive Reps */}
-      {inactiveReps.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-gray-400">Inactive Reps</CardTitle>
-          </CardHeader>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Rep</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Join Date</TableHead>
-                <TableHead>Total Dials</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {inactiveReps.map((rep) => (
-                <TableRow key={rep.id} className="opacity-60">
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback>{getInitials(rep.full_name)}</AvatarFallback>
-                      </Avatar>
-                      <p className="font-medium">{rep.full_name}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="destructive">SUSPENDED</Badge>
-                  </TableCell>
-                  <TableCell>{formatDate(new Date(rep.created_at))}</TableCell>
-                  <TableCell>{rep.totalDials.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleToggleStatus(rep.id, rep.is_active)}
-                    >
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Reactivate
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Card>
-      )}
 
       {/* Add Rep Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
