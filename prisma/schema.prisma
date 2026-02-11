@@ -1,0 +1,290 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MODEL
+// ============================================
+enum UserRole {
+  ADMIN
+  REP
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  name      String
+  role      UserRole   @default(REP)
+  phone     String?
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  assignedLeads Lead[]       @relation("AssignedLeads")
+  activities    Activity[]
+  demos         Demo[]
+  commissions   Commission[]
+  importedLists LeadList[]
+
+  @@map("users")
+}
+
+// ============================================
+// LEAD MODEL
+// ============================================
+enum Industry {
+  LEGAL
+  RESTORATION
+}
+
+enum LeadStatus {
+  NEW
+  ASSIGNED
+  CONTACTED
+  CALLBACK_SCHEDULED
+  DEMO_BOOKED
+  DEMO_COMPLETED
+  CLOSED_WON
+  CLOSED_LOST
+  DO_NOT_CONTACT
+  BAD_DATA
+}
+
+enum LeadSource {
+  CSV_IMPORT
+  MANUAL
+}
+
+enum LeadPriority {
+  HOT
+  WARM
+  COLD
+}
+
+model Lead {
+  id            String       @id @default(cuid())
+  companyName   String       @map("company_name")
+  contactName   String       @map("contact_name")
+  contactTitle  String?      @map("contact_title")
+  phone         String
+  email         String?
+  website       String?
+  industry      Industry
+  subIndustry   String?      @map("sub_industry")
+  employeeCount Int?         @map("employee_count")
+  revenueRange  String?      @map("revenue_range")
+  city          String?
+  state         String?
+  timezone      String?
+  status        LeadStatus   @default(NEW)
+  assignedToId  String?      @map("assigned_to")
+  source        LeadSource   @default(CSV_IMPORT)
+  priority      LeadPriority @default(COLD)
+  notes         String?      @db.Text
+  leadListId    String?      @map("lead_list_id")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  assignedTo  User?      @relation("AssignedLeads", fields: [assignedToId], references: [id])
+  activities  Activity[]
+  demos       Demo[]
+  commissions Commission[]
+  leadList    LeadList?  @relation(fields: [leadListId], references: [id])
+
+  @@index([status])
+  @@index([assignedToId])
+  @@index([industry])
+  @@index([phone])
+  @@index([email])
+  @@map("leads")
+}
+
+// ============================================
+// ACTIVITY MODEL
+// ============================================
+enum ActivityType {
+  CALL
+  VOICEMAIL
+  EMAIL
+  NOTE
+  STATUS_CHANGE
+  DEMO
+  CALLBACK
+}
+
+enum CallDisposition {
+  CONNECTED
+  NO_ANSWER
+  VOICEMAIL
+  WRONG_NUMBER
+  GATEKEEPER
+  NOT_INTERESTED
+  CALLBACK
+  DEMO_BOOKED
+}
+
+model Activity {
+  id              String           @id @default(cuid())
+  leadId          String           @map("lead_id")
+  repId           String           @map("rep_id")
+  activityType    ActivityType     @map("activity_type")
+  callDisposition CallDisposition? @map("call_disposition")
+  durationSeconds Int?             @map("duration_seconds")
+  notes           String?          @db.Text
+  callbackDate    DateTime?        @map("callback_date")
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  rep  User @relation(fields: [repId], references: [id])
+
+  @@index([leadId])
+  @@index([repId])
+  @@index([createdAt])
+  @@map("activities")
+}
+
+// ============================================
+// DEMO MODEL
+// ============================================
+enum DemoStatus {
+  SCHEDULED
+  COMPLETED
+  NO_SHOW
+  CANCELLED
+  RESCHEDULED
+}
+
+enum DemoOutcome {
+  INTERESTED
+  CLOSED_WON
+  CLOSED_LOST
+  FOLLOW_UP
+}
+
+model Demo {
+  id          String       @id @default(cuid())
+  leadId      String       @map("lead_id")
+  repId       String       @map("rep_id")
+  scheduledAt DateTime     @map("scheduled_at")
+  status      DemoStatus   @default(SCHEDULED)
+  meetingLink String?      @map("meeting_link")
+  notes       String?      @db.Text
+  outcome     DemoOutcome?
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  // Relations
+  lead        Lead         @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  rep         User         @relation(fields: [repId], references: [id])
+  commissions Commission[]
+
+  @@index([leadId])
+  @@index([repId])
+  @@index([scheduledAt])
+  @@map("demos")
+}
+
+// ============================================
+// COMMISSION MODEL
+// ============================================
+enum CommissionType {
+  DEMO_BOOKED
+  DEMO_COMPLETED
+  CLOSE
+  RESIDUAL
+  BONUS
+}
+
+enum CommissionStatus {
+  PENDING
+  APPROVED
+  PAID
+  REJECTED
+}
+
+model Commission {
+  id        String           @id @default(cuid())
+  repId     String           @map("rep_id")
+  leadId    String           @map("lead_id")
+  demoId    String?          @map("demo_id")
+  type      CommissionType
+  amount    Float
+  status    CommissionStatus @default(PENDING)
+  period    String?          // For residuals: "2026-02"
+  notes     String?
+  createdAt DateTime         @default(now()) @map("created_at")
+  paidAt    DateTime?        @map("paid_at")
+
+  // Relations
+  rep  User  @relation(fields: [repId], references: [id])
+  lead Lead  @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  demo Demo? @relation(fields: [demoId], references: [id])
+
+  @@index([repId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("commissions")
+}
+
+// ============================================
+// LEAD LIST MODEL
+// ============================================
+model LeadList {
+  id          String   @id @default(cuid())
+  name        String
+  industry    Industry
+  totalLeads  Int      @map("total_leads")
+  importedById String  @map("imported_by")
+  archived    Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  importedBy User   @relation(fields: [importedById], references: [id])
+  leads      Lead[]
+
+  @@map("lead_lists")
+}
+
+// ============================================
+// SETTINGS MODEL
+// ============================================
+model Settings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+// ============================================
+// AUDIT LOG MODEL
+// ============================================
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  oldValue   Json?    @map("old_value")
+  newValue   Json?    @map("new_value")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

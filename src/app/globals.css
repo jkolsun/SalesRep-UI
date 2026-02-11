@@ -1,0 +1,192 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+
+    --card: 217 33% 17%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 186 49% 36%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 174 62% 56%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 22%;
+    --input: 217 33% 17%;
+    --ring: 186 49% 36%;
+
+    --radius: 1rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-brand-bg text-white antialiased;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Glass morphism card effect */
+.glass-card {
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #2E7D8A 0%, #4fd1c5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glow effects */
+.glow-teal {
+  box-shadow: 0 0 20px rgba(46, 125, 138, 0.3);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(79, 209, 197, 0.3);
+}
+
+.glow-green {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+/* App-like touch optimizations */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Prevent 300ms tap delay on mobile */
+html {
+  touch-action: manipulation;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Button press animation */
+@keyframes button-press {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+.btn-press:active {
+  animation: button-press 0.15s ease-out;
+}
+
+/* Fade in animation for cards */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.3s ease-out;
+}
+
+/* Pulse animation for notifications */
+@keyframes pulse-teal {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 125, 138, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(46, 125, 138, 0); }
+}
+
+.pulse-teal {
+  animation: pulse-teal 2s infinite;
+}
+
+/* Safe area for mobile devices with notches */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile bottom nav spacing for content */
+.pb-mobile-nav {
+  padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .pb-mobile-nav {
+    padding-bottom: 0;
+  }
+}
+
+/* Keyboard shortcut badge */
+.kbd {
+  @apply inline-flex h-5 min-w-[20px] items-center justify-center rounded border border-white/20 bg-white/10 px-1 text-[10px] font-medium text-gray-400;
+}
+
+/* Stat card hover effect */
+.stat-card {
+  @apply transition-all duration-200;
+}
+
+.stat-card:hover {
+  @apply border-teal-500/50;
+  box-shadow: 0 0 20px rgba(46, 125, 138, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Dialer action button */
+.dialer-btn {
+  @apply flex h-16 w-full items-center justify-center gap-3 rounded-xl text-lg font-medium transition-all duration-200;
+}
+
+.dialer-btn:hover {
+  transform: scale(1.02);
+}
+
+.dialer-btn:active {
+  transform: scale(0.98);
+}
