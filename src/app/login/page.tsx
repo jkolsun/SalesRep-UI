@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -20,7 +20,37 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+
+  // Check for existing session on page load
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      try {
+        const supabase = createClient()
+        const { data: { session } } = await supabase.auth.getSession()
+
+        if (session?.user) {
+          // User already has a valid session, redirect based on role
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single()
+
+          const role = profile?.role || 'rep'
+          const redirectUrl = role === 'admin' ? '/admin/dashboard' : '/rep/dashboard'
+          window.location.replace(redirectUrl)
+          return
+        }
+      } catch (error) {
+        console.error('Session check error:', error)
+      }
+      setIsCheckingSession(false)
+    }
+
+    checkExistingSession()
+  }, [])
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {}
@@ -48,8 +78,21 @@ export default function LoginPage() {
 
     setIsLoading(true)
 
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      setIsLoading(false)
+      toast({
+        title: 'Login Timeout',
+        description: 'Login is taking too long. Please try again or clear your browser cache.',
+        variant: 'destructive',
+      })
+    }, 15000) // 15 second timeout
+
     try {
       const supabase = createClient()
+
+      // Clear any existing session first to avoid conflicts
+      await supabase.auth.signOut()
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -57,6 +100,7 @@ export default function LoginPage() {
       })
 
       if (error) {
+        clearTimeout(timeoutId)
         toast({
           title: 'Login Failed',
           description: error.message || 'Invalid email or password',
@@ -78,6 +122,7 @@ export default function LoginPage() {
           console.error('Profile fetch error:', profileError)
         }
 
+        clearTimeout(timeoutId)
         toast({
           title: 'Welcome back!',
           description: 'Login successful',
@@ -92,9 +137,11 @@ export default function LoginPage() {
         window.location.replace(redirectUrl)
         return
       } else {
+        clearTimeout(timeoutId)
         setIsLoading(false)
       }
     } catch (error) {
+      clearTimeout(timeoutId)
       toast({
         title: 'Error',
         description: 'An unexpected error occurred. Please try again.',
@@ -104,8 +151,14 @@ export default function LoginPage() {
     }
   }
 
-  // Handle error from URL params (e.g., after email confirmation fails)
-  // useEffect would go here if needed
+  // Show loading while checking existing session
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-brand-bg">
+        <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-brand-bg p-4">
