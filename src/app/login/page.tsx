@@ -23,21 +23,17 @@ export default function LoginPage() {
   const [showClearRetry, setShowClearRetry] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
 
-  // Clear browser storage and retry login
+  // Clear ALL browser storage including cookies and retry login
   const handleClearAndRetry = () => {
-    // Clear all Supabase-related storage
     if (typeof window !== 'undefined') {
-      // Clear localStorage
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('sb-') || key.includes('supabase')) {
-          localStorage.removeItem(key)
-        }
-      })
-      // Clear sessionStorage
-      Object.keys(sessionStorage).forEach(key => {
-        if (key.startsWith('sb-') || key.includes('supabase')) {
-          sessionStorage.removeItem(key)
-        }
+      // Clear ALL localStorage
+      localStorage.clear()
+      // Clear ALL sessionStorage
+      sessionStorage.clear()
+      // Clear ALL cookies for this domain
+      document.cookie.split(';').forEach(cookie => {
+        const name = cookie.split('=')[0].trim()
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
       })
     }
     setShowClearRetry(false)
