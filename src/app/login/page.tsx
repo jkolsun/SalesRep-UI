@@ -20,7 +20,30 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [showClearRetry, setShowClearRetry] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+
+  // Clear browser storage and retry login
+  const handleClearAndRetry = () => {
+    // Clear all Supabase-related storage
+    if (typeof window !== 'undefined') {
+      // Clear localStorage
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('sb-') || key.includes('supabase')) {
+          localStorage.removeItem(key)
+        }
+      })
+      // Clear sessionStorage
+      Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('sb-') || key.includes('supabase')) {
+          sessionStorage.removeItem(key)
+        }
+      })
+    }
+    setShowClearRetry(false)
+    // Reload the page to get a fresh state
+    window.location.reload()
+  }
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {}
@@ -51,12 +74,13 @@ export default function LoginPage() {
     // Add timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
       setIsLoading(false)
+      setShowClearRetry(true)
       toast({
         title: 'Login Timeout',
-        description: 'Login is taking too long. Please try again or clear your browser cache.',
+        description: 'Login is taking too long. Click "Clear & Retry" below.',
         variant: 'destructive',
       })
-    }, 15000) // 15 second timeout
+    }, 10000) // 10 second timeout
 
     try {
       const supabase = createClient()
@@ -252,6 +276,18 @@ export default function LoginPage() {
                   </>
                 )}
               </Button>
+
+              {/* Clear & Retry Button - shows after timeout */}
+              {showClearRetry && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="w-full h-11 mt-3"
+                  onClick={handleClearAndRetry}
+                >
+                  Clear Cache & Retry
+                </Button>
+              )}
             </form>
 
             {/* Sign Up Link */}
