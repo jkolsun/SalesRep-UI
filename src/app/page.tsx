@@ -30,20 +30,11 @@ export default function Home() {
             </Button>
           </Link>
 
-          <div className="flex gap-4 text-sm">
-            <Link
-              href="/rep/dashboard"
-              className="flex-1 text-center text-gray-400 hover:text-white transition-colors"
-            >
-              Demo: Rep Portal
-            </Link>
-            <Link
-              href="/admin/dashboard"
-              className="flex-1 text-center text-gray-400 hover:text-white transition-colors"
-            >
-              Demo: Admin Portal
-            </Link>
-          </div>
+          <Link href="/signup" className="block">
+            <Button size="lg" variant="outline" className="w-full">
+              Create Account
+            </Button>
+          </Link>
         </div>
       </div>
 
