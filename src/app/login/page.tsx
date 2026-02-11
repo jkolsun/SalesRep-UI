@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -20,37 +20,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [isCheckingSession, setIsCheckingSession] = useState(true)
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
-
-  // Check for existing session on page load
-  useEffect(() => {
-    const checkExistingSession = async () => {
-      try {
-        const supabase = createClient()
-        const { data: { session } } = await supabase.auth.getSession()
-
-        if (session?.user) {
-          // User already has a valid session, redirect based on role
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single()
-
-          const role = profile?.role || 'rep'
-          const redirectUrl = role === 'admin' ? '/admin/dashboard' : '/rep/dashboard'
-          window.location.replace(redirectUrl)
-          return
-        }
-      } catch (error) {
-        console.error('Session check error:', error)
-      }
-      setIsCheckingSession(false)
-    }
-
-    checkExistingSession()
-  }, [])
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {}
@@ -149,15 +119,6 @@ export default function LoginPage() {
       })
       setIsLoading(false)
     }
-  }
-
-  // Show loading while checking existing session
-  if (isCheckingSession) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-bg">
-        <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
-      </div>
-    )
   }
 
   return (
